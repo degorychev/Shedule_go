@@ -4,6 +4,7 @@ import (
   "database/sql"
   "fmt"
   "net/http"
+  "os"
 
   _ "github.com/go-sql-driver/mysql"
   "github.com/labstack/echo"
@@ -60,5 +61,6 @@ func main() {
 	})
 	
 	//e.Logger.Fatal(e.Start(":4000"))
-	e.Logger.Fatal(e.Start(":80"))
+	port := os.Getenv("PORT")
+	e.Logger.Fatal(e.Start(":" + port))
 }
