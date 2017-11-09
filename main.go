@@ -85,7 +85,7 @@ func main() {
 
 		rows, _ := db.Query("SELECT class FROM timetable  where (date>DATE_ADD(now(), INTERVAL -31 DAY)) group by class")
 			
-		groups := make([]groupname, 10)
+		groups := make([]groupname, 0)
 		for rows.Next(){
 			_ = rows.Scan(&Naimenovanie)
 			groups = append(groups, groupname{"", "null", Naimenovanie})
@@ -102,7 +102,7 @@ func main() {
 			
 		rows, _ := db.Query("SELECT teacher FROM timetable where (date>DATE_ADD(now(), INTERVAL -31 DAY)) group by teacher")
 						
-		teachers := make([]teachername, 10)
+		teachers := make([]teachername, 0)
 		for rows.Next(){
 			_ = rows.Scan(&Naimenovanie)
 			teachers = append(teachers, teachername{"", "null", Naimenovanie})
