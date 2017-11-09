@@ -67,7 +67,7 @@ func main() {
 		pass := os.Getenv("pass")
 		
 		mm := mysql.NewConfig()
-		mm.Addr = host
+		mm.Net = host
 		mm.DBName=database
 		mm.User=user
 		mm.Passwd=pass
