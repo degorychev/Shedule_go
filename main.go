@@ -27,15 +27,18 @@ type (
 
 	shedule struct {
 		Error string `json:"error"`
+    	Date string `json:"date"`
+		Class string `json:"group"`
     	TimeStart string `json:"start"`
 		TimeStop string `json:"stop"`
     	Discipline string `json:"disc"`
 		Tip string `json:"type"`
     	Teacher string `json:"teacher"`
 		Cabinet string `json:"kabinet"`
-		Subgroup string `json:"sugr"`
+		Subgroup string `json:"subgr"`
 	}
 )
+
 
 func main() {
 	// Echo instance
@@ -53,8 +56,7 @@ func main() {
 	
 	// Route => handler
 	e.GET("/", func(c echo.Context) error {
-		response := groupname{ID: "noID", Error: "true", Name: "Добро пожаловать в api"}
-		return c.JSON(http.StatusOK, response)
+		return c.File("html/index.html")
 	})
 
 	//Все группы
@@ -91,11 +93,13 @@ func main() {
 		return c.JSON(http.StatusOK, teachers)//вернуть json				
 	})
 
-	//Расписание
-	e.GET("/shedule/today/:group", func(c echo.Context) error {
+	//Расписание для студента
+	e.GET("/shedule/student/:group/today", func(c echo.Context) error {
 		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
 		group := c.Param("group")
 							
+		var date string;
+		var class string;
 		var timeStart string;
 		var timeStop string;
 		var discipline string;
@@ -104,15 +108,42 @@ func main() {
 		var cabinet string;
 		var subgroup string;
 			
-		rows, _ := db.Query("SELECT `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?)and(date = CURDATE())", group)
-							
+		rows, _ := db.Query("SELECT `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?)and(date = CURDATE())", group)
+				
 		pairs := make([]shedule, 0)
 		for rows.Next(){
-			_ = rows.Scan(&timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
-			pairs = append(pairs, shedule{group, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
+			_ = rows.Scan(&date, &class, &timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
+			pairs = append(pairs, shedule{"false", date, class, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
 			
 		}
 					
+		return c.JSON(http.StatusOK, pairs)//вернуть json				
+	})
+
+	//Расписание для преподавателя
+	e.GET("/shedule/teacher/:teacher/today", func(c echo.Context) error {
+		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+		prep := c.Param("teacher")
+							
+		var date string;
+		var class string;
+		var timeStart string;
+		var timeStop string;
+		var discipline string;
+		var tip string;
+		var teacher string;
+		var cabinet string;
+		var subgroup string;
+			
+		rows, _ := db.Query("SELECT `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (teacher LIKE (?))and(date = CURDATE())", prep+"%")
+				
+		pairs := make([]shedule, 0)
+		for rows.Next(){
+			_ = rows.Scan(&date, &class, &timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
+			pairs = append(pairs, shedule{"false", date, class, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
+			
+		}
+						
 		return c.JSON(http.StatusOK, pairs)//вернуть json				
 	})
 
