@@ -96,7 +96,7 @@ func main() {
 
 	//Все преподаватели
 	e.GET("/teachers", func(c echo.Context) error {
-		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+		db, _ := sql.Open("mysql", database) //Открыть соединение с БД
 							
 		var Naimenovanie string;
 			
@@ -113,7 +113,7 @@ func main() {
 
 	//Расписание для студента
 	e.GET("/shedule/student/:group/today", func(c echo.Context) error {
-		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+		db, _ := sql.Open("mysql", database) //Открыть соединение с БД
 		group := c.Param("group")
 							
 		var date string;
@@ -140,7 +140,7 @@ func main() {
 
 	//Расписание для преподавателя
 	e.GET("/shedule/teacher/:teacher/today", func(c echo.Context) error {
-		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+		db, _ := sql.Open("mysql", database) //Открыть соединение с БД
 		prep := c.Param("teacher")
 							
 		var date string;
@@ -169,7 +169,7 @@ func main() {
 	//Название группы по id
 	e.GET("/groups/name/:id", func(c echo.Context) error {
 		requestedID := c.Param("id") //вытащить id из запроса
-		db, err := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+		db, err := sql.Open("mysql", database) //Открыть соединение с БД
 		if err != nil { //в случае ошибки
 			fmt.Println(err.Error())
 			response := groupname{ID: "", Error: "true", Name: ""}
