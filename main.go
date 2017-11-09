@@ -40,6 +40,21 @@ type (
 	}
 )
 
+func getConnetctString() string{	
+	host := os.Getenv("host")
+	database := os.Getenv("database")
+	user := os.Getenv("user")
+	pass := os.Getenv("pass")
+	socket := os.Getenv("socket")
+	
+	mm := mysql.NewConfig()
+	mm.Net = "tcp("+ host + ":" + socket + ")"
+	mm.DBName=database
+	mm.User=user
+	mm.Passwd=pass
+
+	return mm.FormatDSN()
+}
 
 func main() {
 	// Echo instance
@@ -59,25 +74,12 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.File("html/index.html")
 	})
-
-	e.GET("/test", func(c echo.Context) error {
-		host := os.Getenv("host")
-		database := os.Getenv("database")
-		user := os.Getenv("user")
-		pass := os.Getenv("pass")
-		socket := os.Getenv("socket")
-		
-		mm := mysql.NewConfig()
-		mm.Net = "tcp("+ host + ":" + socket + ")"
-		mm.DBName=database
-		mm.User=user
-		mm.Passwd=pass
-		return c.String(http.StatusOK, mm.FormatDSN())
-	})
+	
+	database := getConnetctString()
 
 	//Все группы
 	e.GET("/groups", func(c echo.Context) error {
-		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+		db, _ := sql.Open("mysql", database) //Открыть соединение с БД
 				
 		var Naimenovanie string;
 
