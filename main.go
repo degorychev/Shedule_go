@@ -2,7 +2,7 @@ package main
 
 import (
   "database/sql"
-  "fmt"
+  //"fmt"
   "net/http"
   "os"
 
@@ -13,11 +13,27 @@ import (
 )
 
 type (
-	//json Структура для отправки
 	groupname struct {
 		Error string `json:"error"`
     	ID string `json:"ID"`
 		Name string `json:"Naimenovanie"`
+	}
+
+	teachername struct {
+		Error string `json:"error"`
+    	ID string `json:"ID"`
+		Name string `json:"FIO"`
+	}
+
+	shedule struct {
+		Error string `json:"error"`
+    	TimeStart string `json:"start"`
+		TimeStop string `json:"stop"`
+    	Discipline string `json:"disc"`
+		Tip string `json:"type"`
+    	Teacher string `json:"teacher"`
+		Cabinet string `json:"kabinet"`
+		Subgroup string `json:"sugr"`
 	}
 )
 
@@ -40,7 +56,68 @@ func main() {
 		response := groupname{ID: "noID", Error: "true", Name: "Добро пожаловать в api"}
 		return c.JSON(http.StatusOK, response)
 	})
+
+	//Все группы
+	e.GET("/groups", func(c echo.Context) error {
+		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+				
+		var Naimenovanie string;
+
+		rows, _ := db.Query("SELECT class FROM timetable  where (date>DATE_ADD(now(), INTERVAL -31 DAY)) group by class")
+			
+		groups := make([]groupname, 10)
+		for rows.Next(){
+			_ = rows.Scan(&Naimenovanie)
+			groups = append(groups, groupname{"", "null", Naimenovanie})
+		}
 	
+		return c.JSON(http.StatusOK, groups)//вернуть json				
+	})
+
+	//Все преподаватели
+	e.GET("/teachers", func(c echo.Context) error {
+		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+							
+		var Naimenovanie string;
+			
+		rows, _ := db.Query("SELECT teacher FROM timetable where (date>DATE_ADD(now(), INTERVAL -31 DAY)) group by teacher")
+						
+		teachers := make([]teachername, 10)
+		for rows.Next(){
+			_ = rows.Scan(&Naimenovanie)
+			teachers = append(teachers, teachername{"", "null", Naimenovanie})
+		}
+				
+		return c.JSON(http.StatusOK, teachers)//вернуть json				
+	})
+
+	//Расписание
+	e.GET("/shedule/today/:group", func(c echo.Context) error {
+		db, _ := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
+		group := c.Param("group")
+							
+		var timeStart string;
+		var timeStop string;
+		var discipline string;
+		var tip string;
+		var teacher string;
+		var cabinet string;
+		var subgroup string;
+			
+		rows, _ := db.Query("SELECT `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?)and(date = CURDATE())", group)
+							
+		pairs := make([]shedule, 0)
+		for rows.Next(){
+			_ = rows.Scan(&timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
+			pairs = append(pairs, shedule{group, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
+			
+		}
+					
+		return c.JSON(http.StatusOK, pairs)//вернуть json				
+	})
+
+	/*
+	//Название группы по id
 	e.GET("/groups/name/:id", func(c echo.Context) error {
 		requestedID := c.Param("id") //вытащить id из запроса
 		db, err := sql.Open("mysql", "egor:egor@tcp(95.104.192.212:3306)/raspisanie") //Открыть соединение с БД
@@ -57,8 +134,13 @@ func main() {
 			fmt.Println(err)
 		}
 		response := groupname{ID: ID, Error: "false", Name: Naimenovanie} //Создание нового json объекта
-		return c.JSON(http.StatusOK, response)//вернуть json
+		return c.JSON(http.StatusOK, response)//вернуть json		
 	})
+	*/
+
+
+
+
 	
 	//e.Logger.Fatal(e.Start(":4000"))
 	port := os.Getenv("PORT")
