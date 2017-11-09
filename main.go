@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/go-sql-driver/mysql"
   "database/sql"
   //"fmt"
   "net/http"
@@ -53,10 +54,27 @@ func main() {
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
 	}))
+
+	//Конфиг-переменные
+	host := os.Getenv("host")
+	port := os.Getenv("port")
+	database := os.Getenv("database")
+	user := os.Getenv("user")
+	pass := os.Getenv("pass")
+	
+	mm := mysql.NewConfig()
+	mm.Addr = host
+	mm.DBName=database
+	mm.User=user
+	mm.Passwd=pass
 	
 	// Route => handler
 	e.GET("/", func(c echo.Context) error {
 		return c.File("html/index.html")
+	})
+
+	e.GET("/test", func(c echo.Context) error {
+		return c.String(http.StatusOK, mm.FormatDSN())
 	})
 
 	//Все группы
@@ -174,6 +192,5 @@ func main() {
 
 	
 	//e.Logger.Fatal(e.Start(":4000"))
-	port := os.Getenv("PORT")
 	e.Logger.Fatal(e.Start(":" + port))
 }
