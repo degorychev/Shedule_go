@@ -65,9 +65,10 @@ func main() {
 		database := os.Getenv("database")
 		user := os.Getenv("user")
 		pass := os.Getenv("pass")
+		socket := os.Getenv("socket")
 		
 		mm := mysql.NewConfig()
-		mm.Net = host
+		mm.Net = "tcp("+ host + ":" + socket + ")"
 		mm.DBName=database
 		mm.User=user
 		mm.Passwd=pass
