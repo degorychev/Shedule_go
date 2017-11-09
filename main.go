@@ -55,25 +55,22 @@ func main() {
 		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
 	}))
 
-	//Конфиг-переменные
-	host := os.Getenv("host")
-	port := os.Getenv("port")
-	database := os.Getenv("database")
-	user := os.Getenv("user")
-	pass := os.Getenv("pass")
-	
-	mm := mysql.NewConfig()
-	mm.Addr = host
-	mm.DBName=database
-	mm.User=user
-	mm.Passwd=pass
-	
 	// Route => handler
 	e.GET("/", func(c echo.Context) error {
 		return c.File("html/index.html")
 	})
 
 	e.GET("/test", func(c echo.Context) error {
+		host := os.Getenv("host")
+		database := os.Getenv("database")
+		user := os.Getenv("user")
+		pass := os.Getenv("pass")
+		
+		mm := mysql.NewConfig()
+		mm.Addr = host
+		mm.DBName=database
+		mm.User=user
+		mm.Passwd=pass
 		return c.String(http.StatusOK, mm.FormatDSN())
 	})
 
@@ -192,5 +189,6 @@ func main() {
 
 	
 	//e.Logger.Fatal(e.Start(":4000"))
+	port := os.Getenv("PORT")
 	e.Logger.Fatal(e.Start(":" + port))
 }
