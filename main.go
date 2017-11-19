@@ -159,7 +159,14 @@ func main() {
 		rows, _ := db.Query("SELECT DAYNAME(`date`) as 'week_day', `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?)and(year(`date`) = year(now()) and week(`date`, 0) = week(now(), 0)) ORDER BY `date` ASC, `timeStart` ASC", group)
 
 		// pairs := make([]shedule, 0)
-		pairsh := make(map[string][]shedule)
+		pairsh := map[string][]shedule{
+			"Monday":    make([]shedule, 0),
+			"Tuesday":   make([]shedule, 0),
+			"Wednesday": make([]shedule, 0),
+			"Thursday":  make([]shedule, 0),
+			"Friday":    make([]shedule, 0),
+			"Saturday":  make([]shedule, 0),
+		}
 		for rows.Next() {
 			_ = rows.Scan(&weekD, &date, &class, &timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
 			pairsh[weekD] = append(pairsh[weekD], shedule{"false", date, class, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
