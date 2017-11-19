@@ -83,13 +83,14 @@ func main() {
 		db, _ := sql.Open("mysql", database) //Открыть соединение с БД
 
 		var Naimenovanie string
+		var ID string
 
-		rows, _ := db.Query("SELECT class FROM timetable  where (date>DATE_ADD(now(), INTERVAL -31 DAY)) group by class")
+		rows, _ := db.Query("SELECT timetable.class, groups_original.ID FROM timetable LEFT join groups_original on groups_original.Naimenovanie = timetable.class  where (date>DATE_ADD(now(), INTERVAL -31 DAY)) group by class")
 
 		groups := make([]groupname, 0)
 		for rows.Next() {
-			_ = rows.Scan(&Naimenovanie)
-			groups = append(groups, groupname{"", "null", Naimenovanie})
+			_ = rows.Scan(&Naimenovanie, &ID)
+			groups = append(groups, groupname{"", ID, Naimenovanie})
 		}
 
 		return c.JSON(http.StatusOK, groups) //вернуть json
@@ -100,13 +101,14 @@ func main() {
 		db, _ := sql.Open("mysql", database) //Открыть соединение с БД
 
 		var Naimenovanie string
+		var ID string
 
-		rows, _ := db.Query("SELECT teacher FROM timetable where (date>DATE_ADD(now(), INTERVAL -31 DAY)) group by teacher")
+		rows, _ := db.Query("SELECT timetable.teacher, prepodavatel_original.ID FROM timetable LEFT join prepodavatel_original on prepodavatel_original.FIO = timetable.teacher where (date>DATE_ADD(now(), INTERVAL -31 DAY)) group by teacher")
 
 		teachers := make([]teachername, 0)
 		for rows.Next() {
-			_ = rows.Scan(&Naimenovanie)
-			teachers = append(teachers, teachername{"", "null", Naimenovanie})
+			_ = rows.Scan(&Naimenovanie, &ID)
+			teachers = append(teachers, teachername{"", ID, Naimenovanie})
 		}
 
 		return c.JSON(http.StatusOK, teachers) //вернуть json
