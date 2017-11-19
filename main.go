@@ -127,7 +127,7 @@ func main() {
 		var cabinet string
 		var subgroup string
 
-		rows, _ := db.Query("SELECT `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?)and(date = CURDATE())", group)
+		rows, _ := db.Query("SELECT `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?)and(date = CURDATE()) ORDER BY `date` ASC, `timeStart` ASC", group)
 
 		pairs := make([]shedule, 0)
 		for rows.Next() {
@@ -145,7 +145,7 @@ func main() {
 		group := c.Param("group")
 
 		// var sheduleweek [6]shedule
-		var weekD int
+		var weekD string
 		var date string
 		var class string
 		var timeStart string
@@ -156,10 +156,10 @@ func main() {
 		var cabinet string
 		var subgroup string
 
-		rows, _ := db.Query("SELECT weekday(`date`) as 'week_day', `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?)and(year(`date`) = year(now()) and week(`date`, 0) = week(now(), 0))", group)
+		rows, _ := db.Query("SELECT DAYNAME(`date`) as 'week_day', `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?)and(year(`date`) = year(now()) and week(`date`, 0) = week(now(), 0)) ORDER BY `date` ASC, `timeStart` ASC", group)
 
 		// pairs := make([]shedule, 0)
-		pairsh := make(map[int][]shedule)
+		pairsh := make(map[string][]shedule)
 		for rows.Next() {
 			_ = rows.Scan(&weekD, &date, &class, &timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
 			pairsh[weekD] = append(pairsh[weekD], shedule{"false", date, class, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
@@ -175,7 +175,7 @@ func main() {
 		prep := c.Param("teacher")
 
 		// var sheduleweek [6]shedule
-		var weekD int
+		var weekD string
 		var date string
 		var class string
 		var timeStart string
@@ -186,10 +186,10 @@ func main() {
 		var cabinet string
 		var subgroup string
 
-		rows, _ := db.Query("SELECT weekday(`date`) as 'week_day', `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (teacher LIKE (?))and(year(`date`) = year(now()) and week(`date`, 0) = week(now(), 0))", prep+"%")
+		rows, _ := db.Query("SELECT DAYNAME(`date`) as 'week_day', `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (teacher LIKE (?))and(year(`date`) = year(now()) and week(`date`, 0) = week(now(), 0)) ORDER BY `date` ASC, `timeStart` ASC", prep+"%")
 
 		// pairs := make([]shedule, 0)
-		pairsh := make(map[int][]shedule)
+		pairsh := make(map[string][]shedule)
 		for rows.Next() {
 			_ = rows.Scan(&weekD, &date, &class, &timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
 			pairsh[weekD] = append(pairsh[weekD], shedule{"false", date, class, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
@@ -214,7 +214,7 @@ func main() {
 		var cabinet string
 		var subgroup string
 
-		rows, _ := db.Query("SELECT `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (teacher LIKE (?))and(date = CURDATE())", prep+"%")
+		rows, _ := db.Query("SELECT `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (teacher LIKE (?))and(date = CURDATE()) ORDER BY `date` ASC, `timeStart` ASC", prep+"%")
 
 		pairs := make([]shedule, 0)
 		for rows.Next() {
