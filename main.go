@@ -282,7 +282,7 @@ func main() {
 		return c.JSON(http.StatusOK, pairs) //вернуть json
 	})
 
-	e.Logger.Fatal(e.Start(":80"))
-	// port := os.Getenv("PORT")
-	// e.Logger.Fatal(e.Start(":" + port))
+	// e.Logger.Fatal(e.Start(":80"))
+	port := os.Getenv("PORT")
+	e.Logger.Fatal(e.Start(":" + port))
 }
