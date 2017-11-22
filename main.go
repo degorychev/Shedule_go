@@ -41,15 +41,15 @@ type (
 	}
 
 	export struct {
-		// Error string   `json:"error"`
-		Start string `json:"start"`
-		End   string `json:"end"`
-		// Class      string `json:"group"`
+		Error      string `json:"error"`
+		Start      string `json:"start"`
+		End        string `json:"end"`
+		Class      string `json:"group"`
 		Discipline string `json:"title"`
-		// Tip        string `json:"type"`
-		// Teacher    string `json:"teacher"`
-		// Cabinet    string `json:"kabinet"`
-		// Subgroup   string `json:"subgr"`
+		Tip        string `json:"type"`
+		Teacher    string `json:"teacher"`
+		Cabinet    string `json:"kabinet"`
+		Subgroup   string `json:"subgr"`
 	}
 )
 
@@ -181,7 +181,7 @@ func main() {
 
 			// var timeStart, _ = time.Parse("2006-01-02 15:04:00", timeStartString)
 			// var timeStop, _ = time.Parse("2006-01-02 15:04:00", timeStopString)
-			pairs = append(pairs, export{timeStartString, timeStopString, discipline})
+			pairs = append(pairs, export{"null", timeStartString, timeStopString, group, discipline, tip, teacher, cabinet, subgroup})
 
 		}
 
@@ -276,6 +276,36 @@ func main() {
 		for rows.Next() {
 			_ = rows.Scan(&date, &class, &timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
 			pairs = append(pairs, shedule{"false", date, class, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
+
+		}
+
+		return c.JSON(http.StatusOK, pairs) //вернуть json
+	})
+
+	//Расписание для студента ВСЕ
+	e.GET("/shedule/teacher/:teacher/all", func(c echo.Context) error {
+		db, _ := sql.Open("mysql", database) //Открыть соединение с БД
+		prep := c.Param("teacher")
+
+		var timeStartString string
+
+		var timeStopString string
+		var discipline string
+		var tip string
+		var group string
+		var cabinet string
+		var subgroup string
+		var teacher string
+
+		rows, _ := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, 'Z') AS 'start', CONCAT(`date`,'T', `timeStop`, 'Z') AS 'end', `discipline`, `type`, `class`, `cabinet`, `subgroup`, `teacher` FROM timetable WHERE (teacher LIKE (?)) ORDER BY `date` ASC, `timeStart` ASC", prep+"%")
+
+		pairs := make([]export, 0)
+		for rows.Next() {
+			_ = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &group, &cabinet, &subgroup, &teacher))
+
+			// var timeStart, _ = time.Parse("2006-01-02 15:04:00", timeStartString)
+			// var timeStop, _ = time.Parse("2006-01-02 15:04:00", timeStopString)
+			pairs = append(pairs, export{"null", timeStartString, timeStopString, group, discipline, tip, teacher, cabinet, subgroup})
 
 		}
 
