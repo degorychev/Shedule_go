@@ -2,18 +2,18 @@ package main
 
 import (
 	"database/sql"
-
-	"github.com/go-sql-driver/mysql"
-	//"fmt"
 	"net/http"
 	"os"
 
 	"github.com/JonathanMH/goClacks/echo"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-)
+) // import "time"
 
+// "os"
+
+// type JSONTime time.Time
 type (
 	groupname struct {
 		Error string `json:"error"`
@@ -39,6 +39,18 @@ type (
 		Cabinet    string `json:"kabinet"`
 		Subgroup   string `json:"subgr"`
 	}
+
+	export struct {
+		// Error string   `json:"error"`
+		Start string `json:"start"`
+		End   string `json:"end"`
+		// Class      string `json:"group"`
+		Discipline string `json:"title"`
+		// Tip        string `json:"type"`
+		// Teacher    string `json:"teacher"`
+		// Cabinet    string `json:"kabinet"`
+		// Subgroup   string `json:"subgr"`
+	}
 )
 
 func getConnetctString() string {
@@ -56,6 +68,12 @@ func getConnetctString() string {
 
 	return mm.FormatDSN()
 }
+
+// func (t JSONTime) MarshalJSON() ([]byte, error) {
+// 	//do your serializing here
+// 	stamp := fmt.Sprintf("\"%s\"", time.Time(t).Format(time.RubyDate))
+// 	return []byte(stamp), nil
+// }
 
 func main() {
 	// Echo instance
@@ -135,6 +153,35 @@ func main() {
 		for rows.Next() {
 			_ = rows.Scan(&date, &class, &timeStart, &timeStop, &discipline, &tip, &teacher, &cabinet, &subgroup)
 			pairs = append(pairs, shedule{"false", date, class, timeStart, timeStop, discipline, tip, teacher, cabinet, subgroup})
+
+		}
+
+		return c.JSON(http.StatusOK, pairs) //вернуть json
+	})
+
+	//Расписание для студента ВСЕ
+	e.GET("/shedule/student/:group/all", func(c echo.Context) error {
+		db, _ := sql.Open("mysql", database) //Открыть соединение с БД
+		group := c.Param("group")
+
+		var timeStartString string
+
+		var timeStopString string
+		var discipline string
+		var tip string
+		var teacher string
+		var cabinet string
+		var subgroup string
+
+		rows, _ := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, 'Z') AS 'start', CONCAT(`date`,'T', `timeStop`, 'Z') AS 'end', `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?) ORDER BY `date` ASC, `timeStart` ASC", group)
+
+		pairs := make([]export, 0)
+		for rows.Next() {
+			_ = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &teacher, &cabinet, &subgroup))
+
+			// var timeStart, _ = time.Parse("2006-01-02 15:04:00", timeStartString)
+			// var timeStop, _ = time.Parse("2006-01-02 15:04:00", timeStopString)
+			pairs = append(pairs, export{timeStartString, timeStopString, discipline})
 
 		}
 
@@ -235,29 +282,7 @@ func main() {
 		return c.JSON(http.StatusOK, pairs) //вернуть json
 	})
 
-	/*
-		//Название группы по id
-		e.GET("/groups/name/:id", func(c echo.Context) error {
-			requestedID := c.Param("id") //вытащить id из запроса
-			db, err := sql.Open("mysql", database) //Открыть соединение с БД
-			if err != nil { //в случае ошибки
-				fmt.Println(err.Error())
-				response := groupname{ID: "", Error: "true", Name: ""}
-				return c.JSON(http.StatusInternalServerError, response)
-			}
-			defer db.Close() //В случае ошибки (?)
-			var Naimenovanie string;
-			var ID string;
-			err = db.QueryRow("SELECT ID, Naimenovanie FROM groups_original WHERE ID = ?", requestedID).Scan(&ID, &Naimenovanie) //Запрос, вернет ошибку, если не удалось просканировать
-			if err != nil {
-				fmt.Println(err)
-			}
-			response := groupname{ID: ID, Error: "false", Name: Naimenovanie} //Создание нового json объекта
-			return c.JSON(http.StatusOK, response)//вернуть json
-		})
-	*/
-
-	// e.Logger.Fatal(e.Start(":80"))
-	port := os.Getenv("PORT")
-	e.Logger.Fatal(e.Start(":" + port))
+	e.Logger.Fatal(e.Start(":80"))
+	// port := os.Getenv("PORT")
+	// e.Logger.Fatal(e.Start(":" + port))
 }
