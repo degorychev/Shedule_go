@@ -173,7 +173,7 @@ func main() {
 		var cabinet string
 		var subgroup string
 
-		rows, _ := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, '-04:00') AS 'start', CONCAT(`date`,'T', `timeStop`, '-04:00') AS 'end', `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?) ORDER BY `date` ASC, `timeStart` ASC", group)
+		rows, _ := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, '+04:00') AS 'start', CONCAT(`date`,'T', `timeStop`, '+04:00') AS 'end', `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?) ORDER BY `date` ASC, `timeStart` ASC", group)
 
 		pairs := make([]export, 0)
 		for rows.Next() {
@@ -297,7 +297,7 @@ func main() {
 		var subgroup string
 		var teacher string
 
-		rows, _ := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, '-04:00') AS 'start', CONCAT(`date`,'T', `timeStop`, '-04:00') AS 'end', `discipline`, `type`, `class`, `cabinet`, `subgroup`, `teacher` FROM timetable WHERE (teacher LIKE (?)) ORDER BY `date` ASC, `timeStart` ASC", prep+"%")
+		rows, _ := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, '+04:00') AS 'start', CONCAT(`date`,'T', `timeStop`, '+04:00') AS 'end', `discipline`, `type`, `class`, `cabinet`, `subgroup`, `teacher` FROM timetable WHERE (teacher LIKE (?)) ORDER BY `date` ASC, `timeStart` ASC", prep+"%")
 
 		pairs := make([]export, 0)
 		for rows.Next() {
