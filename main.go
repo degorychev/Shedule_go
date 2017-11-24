@@ -269,7 +269,7 @@ func main() {
 		var teacher string
 		var cabinet string
 		var subgroup string
-Z
+
 		rows, _ := db.Query("SELECT `date`, `class`, `timeStart`, `timeStop`, `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (teacher LIKE (?))and(date = CURDATE()) ORDER BY `date` ASC, `timeStart` ASC", prep+"%")
 
 		pairs := make([]shedule, 0)
