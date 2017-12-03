@@ -148,6 +148,7 @@ func main() {
 		var Setting string
 
 		if err == nil {
+
 			if messenger == "tele" {
 				rows, err := db.Query("select `Position`, `Value`, `Setting` from users where `id`=?", id)
 
