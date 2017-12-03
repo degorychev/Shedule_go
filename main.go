@@ -13,7 +13,6 @@ import (
 
 // "os"
 
-// type JSONTime time.Time
 type (
 	groupname struct {
 		Error string `json:"error"`
@@ -25,6 +24,13 @@ type (
 		Error string `json:"error"`
 		ID    string `json:"ID"`
 		Name  string `json:"FIO"`
+	}
+
+	whoexp struct {
+		Error    string `json:"error"`
+		Position string `json:"Position"`
+		Value    string `json:"Value"`
+		Setting  string `json:"Setting"`
 	}
 
 	shedule struct {
@@ -130,6 +136,47 @@ func main() {
 		}
 
 		return c.JSON(http.StatusOK, teachers) //вернуть json
+	})
+	//Кто этот пользователь для мессенджера
+	e.GET("/bot/who", func(c echo.Context) error {
+		db, err := sql.Open("mysql", database) //Открыть соединение с БД
+		messenger := c.QueryParam("mess")
+		id := c.QueryParam("id")
+
+		var Position string
+		var Value string
+		var Setting string
+
+		if err == nil {
+			if messenger == "tele" {
+				rows, err := db.Query("select `Position`, `Value`, `Setting` from users where `id`=?", id)
+
+				if err == nil {
+					if rows.Next() {
+						_ = rows.Scan(&Position, &Value, &Setting)
+					} else {
+						return c.JSON(http.StatusOK, whoexp{"no_rows", "", "", ""})
+					}
+					return c.JSON(http.StatusOK, whoexp{"false", Position, Value, Setting})
+				}
+				return c.JSON(http.StatusOK, whoexp{"no_query", "", "", ""})
+
+			} else if messenger == "vk" {
+				rows, err := db.Query("select `Position`, `Value`, `Setting` from usersVK where `id`=?", id)
+
+				if err == nil {
+					if rows.Next() {
+						_ = rows.Scan(&Position, &Value, &Setting)
+					} else {
+						return c.JSON(http.StatusOK, whoexp{"no_rows", "", "", ""})
+					}
+					return c.JSON(http.StatusOK, whoexp{"false", Position, Value, Setting})
+				}
+				return c.JSON(http.StatusOK, whoexp{"no_query", "", "", ""})
+			}
+			return c.JSON(http.StatusOK, whoexp{"no_mess", "", "", ""})
+		}
+		return c.JSON(http.StatusOK, whoexp{"no_sql", "", "", ""})
 	})
 
 	//Расписание для студента
