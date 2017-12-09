@@ -268,8 +268,12 @@ func main() {
 							var subgroup string
 							pairs := make([]export, 0)
 							for rows.Next() {
-								_ = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &teacher, &cabinet, &subgroup))
-								pairs = append(pairs, export{"null", timeStartString, timeStopString, Value, discipline, tip, teacher, cabinet, subgroup})
+								err = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &teacher, &cabinet, &subgroup))
+								if err == nil {
+									pairs = append(pairs, export{"null", timeStartString, timeStopString, Value, discipline, tip, teacher, cabinet, subgroup})
+								} else {
+									pairs = append(pairs, export{"Scan", "", "", "", "", "", "", "", ""})
+								}
 							}
 							return c.JSON(http.StatusOK, pairs) //вернуть json
 						}
@@ -287,8 +291,12 @@ func main() {
 							var teacher string
 							pairs := make([]export, 0)
 							for rows.Next() {
-								_ = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &group, &cabinet, &subgroup, &teacher))
-								pairs = append(pairs, export{"null", timeStartString, timeStopString, group, discipline, tip, teacher, cabinet, subgroup})
+								err = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &group, &cabinet, &subgroup, &teacher))
+								if err == nil {
+									pairs = append(pairs, export{"null", timeStartString, timeStopString, Value, discipline, tip, teacher, cabinet, subgroup})
+								} else {
+									pairs = append(pairs, export{"Scan", "", "", "", "", "", "", "", ""})
+								}
 							}
 							return c.JSON(http.StatusOK, pairs) //вернуть json
 						}
@@ -301,6 +309,36 @@ func main() {
 			return c.JSON(http.StatusOK, whoexp{"no_mess", "", "", ""})
 		}
 		return c.JSON(http.StatusOK, whoexp{"no_sql", "", "", ""})
+	})
+
+	//Установить параметры пользователю
+	e.POST("/bot/setsetting", func(c echo.Context) error {
+		db, err := sql.Open("mysql", database) //Открыть соединение с БД
+		secret := os.Getenv("secretWord")
+		token := c.FormValue("token")
+		messenger := c.FormValue("mess")
+		id := c.FormValue("id")
+		position := c.FormValue("position")
+		value := c.FormValue("value")
+		table := "none"
+		if messenger == "tele" {
+			table = "users"
+		} else if messenger == "vk" {
+			table = "usersvk"
+		}
+		if token == secret {
+			if err == nil {
+				_, err := db.Exec("INSERT INTO " + table + " SET `ID`='" + id + "', `Position`='" + position + "', `Value`='" + value + "' ON DUPLICATE KEY UPDATE `Position`='" + position + "', `Value`='" + value + "'")
+				//_, err := db.Exec("INSERT INTO ? SET `ID`='?', `Position`='?', `Value`='?' ON DUPLICATE KEY UPDATE `Position`='?', `Value`='?'", table, id, position, value, position, value)
+				if err != nil {
+					return c.String(http.StatusOK, "bad_sql_insert")
+				}
+				return c.String(http.StatusOK, "insert_ok")
+			}
+			return c.String(http.StatusOK, "no_database")
+		}
+		return c.String(http.StatusOK, "token is not ok")
+
 	})
 
 	//Расписание для студента
@@ -469,9 +507,6 @@ func main() {
 		pairs := make([]export, 0)
 		for rows.Next() {
 			_ = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &group, &cabinet, &subgroup, &teacher))
-
-			// var timeStart, _ = time.Parse("2006-01-02 15:04:00", timeStartString)
-			// var timeStop, _ = time.Parse("2006-01-02 15:04:00", timeStopString)
 			pairs = append(pairs, export{"null", timeStartString, timeStopString, group, discipline, tip, teacher, cabinet, subgroup})
 
 		}
