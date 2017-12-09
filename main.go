@@ -75,12 +75,6 @@ func getConnetctString() string {
 	return mm.FormatDSN()
 }
 
-// func (t JSONTime) MarshalJSON() ([]byte, error) {
-// 	//do your serializing here
-// 	stamp := fmt.Sprintf("\"%s\"", time.Time(t).Format(time.RubyDate))
-// 	return []byte(stamp), nil
-// }
-
 func main() {
 	// Echo instance
 	e := echo.New()
@@ -137,6 +131,7 @@ func main() {
 
 		return c.JSON(http.StatusOK, teachers) //вернуть json
 	})
+
 	//Кто этот пользователь для мессенджера
 	e.GET("/bot/who", func(c echo.Context) error {
 		db, err := sql.Open("mysql", database) //Открыть соединение с БД
@@ -172,6 +167,134 @@ func main() {
 						return c.JSON(http.StatusOK, whoexp{"no_rows", "", "", ""})
 					}
 					return c.JSON(http.StatusOK, whoexp{"false", Position, Value, Setting})
+				}
+				return c.JSON(http.StatusOK, whoexp{"no_query", "", "", ""})
+			}
+			return c.JSON(http.StatusOK, whoexp{"no_mess", "", "", ""})
+		}
+		return c.JSON(http.StatusOK, whoexp{"no_sql", "", "", ""})
+	})
+
+	//Расписание пользователя
+	e.GET("/bot/shedulefor", func(c echo.Context) error {
+		db, err := sql.Open("mysql", database) //Открыть соединение с БД
+		messenger := c.QueryParam("mess")
+		id := c.QueryParam("id")
+
+		var Position string
+		var Value string
+		var Setting string
+
+		if err == nil {
+			if messenger == "tele" {
+				rows, err := db.Query("select `Position`, `Value`, `Setting` from users where `id`=?", id)
+				if err == nil {
+					if rows.Next() {
+						err = rows.Scan(&Position, &Value, &Setting)
+						if err != nil {
+							return c.JSON(http.StatusOK, whoexp{"no_scan", "", "", ""})
+						}
+					} else {
+						return c.JSON(http.StatusOK, whoexp{"no_rows", "", "", ""})
+					}
+					if Position == "Студент" {
+						rows, err := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, '+04:00') AS 'start', CONCAT(`date`,'T', `timeStop`, '+04:00') AS 'end', `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?) ORDER BY `date` ASC, `timeStart` ASC", Value)
+						if err == nil {
+							var timeStartString string
+							var timeStopString string
+							var discipline string
+							var tip string
+							var teacher string
+							var cabinet string
+							var subgroup string
+							pairs := make([]export, 0)
+							for rows.Next() {
+								err = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &teacher, &cabinet, &subgroup))
+								if err == nil {
+									pairs = append(pairs, export{"null", timeStartString, timeStopString, Value, discipline, tip, teacher, cabinet, subgroup})
+								} else {
+									pairs = append(pairs, export{"Scan", "", "", "", "", "", "", "", ""})
+								}
+							}
+							return c.JSON(http.StatusOK, pairs) //вернуть json
+						}
+						return c.JSON(http.StatusOK, whoexp{"no_query_2", "", "", ""})
+					} else if Position == "Преподаватель" {
+						rows, err := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, '+04:00') AS 'start', CONCAT(`date`,'T', `timeStop`, '+04:00') AS 'end', `discipline`, `type`, `class`, `cabinet`, `subgroup`, `teacher` FROM timetable WHERE (teacher LIKE (?)) ORDER BY `date` ASC, `timeStart` ASC", Value+"%")
+						if err == nil {
+							var timeStartString string
+							var timeStopString string
+							var discipline string
+							var tip string
+							var group string
+							var cabinet string
+							var subgroup string
+							var teacher string
+							pairs := make([]export, 0)
+							for rows.Next() {
+								err = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &group, &cabinet, &subgroup, &teacher))
+								if err == nil {
+									pairs = append(pairs, export{"null", timeStartString, timeStopString, Value, discipline, tip, teacher, cabinet, subgroup})
+								} else {
+									pairs = append(pairs, export{"Scan", "", "", "", "", "", "", "", ""})
+								}
+							}
+							return c.JSON(http.StatusOK, pairs) //вернуть json
+						}
+						return c.JSON(http.StatusOK, whoexp{"no_query_2", "", "", ""})
+					}
+					return c.JSON(http.StatusOK, whoexp{"No_position", Position, Value, Setting})
+				}
+				return c.JSON(http.StatusOK, whoexp{"no_query", "", "", ""})
+
+			} else if messenger == "vk" {
+				rows, err := db.Query("select `Position`, `Value`, `Setting` from usersvk where `id`=?", id)
+
+				if err == nil {
+					if rows.Next() {
+						_ = rows.Scan(&Position, &Value, &Setting)
+					} else {
+						return c.JSON(http.StatusOK, whoexp{"no_rows", "", "", ""})
+					}
+					if Position == "Студент" {
+						rows, err := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, '+04:00') AS 'start', CONCAT(`date`,'T', `timeStop`, '+04:00') AS 'end', `discipline`, `type`, `teacher`, `cabinet`, `subgroup` FROM timetable WHERE (class = ?) ORDER BY `date` ASC, `timeStart` ASC", Value)
+						if err == nil {
+							var timeStartString string
+							var timeStopString string
+							var discipline string
+							var tip string
+							var teacher string
+							var cabinet string
+							var subgroup string
+							pairs := make([]export, 0)
+							for rows.Next() {
+								_ = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &teacher, &cabinet, &subgroup))
+								pairs = append(pairs, export{"null", timeStartString, timeStopString, Value, discipline, tip, teacher, cabinet, subgroup})
+							}
+							return c.JSON(http.StatusOK, pairs) //вернуть json
+						}
+						return c.JSON(http.StatusOK, whoexp{"no_query_2", "", "", ""})
+					} else if Position == "Преподаватель" {
+						rows, err := db.Query("SELECT CONCAT(`date`,'T', `timeStart`, '+04:00') AS 'start', CONCAT(`date`,'T', `timeStop`, '+04:00') AS 'end', `discipline`, `type`, `class`, `cabinet`, `subgroup`, `teacher` FROM timetable WHERE (teacher LIKE (?)) ORDER BY `date` ASC, `timeStart` ASC", Value+"%")
+						if err == nil {
+							var timeStartString string
+							var timeStopString string
+							var discipline string
+							var tip string
+							var group string
+							var cabinet string
+							var subgroup string
+							var teacher string
+							pairs := make([]export, 0)
+							for rows.Next() {
+								_ = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &group, &cabinet, &subgroup, &teacher))
+								pairs = append(pairs, export{"null", timeStartString, timeStopString, group, discipline, tip, teacher, cabinet, subgroup})
+							}
+							return c.JSON(http.StatusOK, pairs) //вернуть json
+						}
+						return c.JSON(http.StatusOK, whoexp{"no_query_2", "", "", ""})
+					}
+					return c.JSON(http.StatusOK, whoexp{"No_position", Position, Value, Setting})
 				}
 				return c.JSON(http.StatusOK, whoexp{"no_query", "", "", ""})
 			}
@@ -226,11 +349,7 @@ func main() {
 		pairs := make([]export, 0)
 		for rows.Next() {
 			_ = (rows.Scan(&timeStartString, &timeStopString, &discipline, &tip, &teacher, &cabinet, &subgroup))
-
-			// var timeStart, _ = time.Parse("2006-01-02 15:04:00", timeStartString)
-			// var timeStop, _ = time.Parse("2006-01-02 15:04:00", timeStopString)
 			pairs = append(pairs, export{"null", timeStartString, timeStopString, group, discipline, tip, teacher, cabinet, subgroup})
-
 		}
 
 		return c.JSON(http.StatusOK, pairs) //вернуть json
